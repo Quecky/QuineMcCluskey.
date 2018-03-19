@@ -1,8 +1,4 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package quinemccluskey;
 
 import java.util.*;
@@ -47,7 +43,7 @@ public class QuineMcCluskey {
     //to track the done[]'s index to store completed variables
     static int term = 0;
     
-    //array de subminterminos?.....
+    //array de subminterminos.....
     static String[] sub_minterms = new String[200];
     static int sub_min_index = 0;
     //index for main array
@@ -62,7 +58,7 @@ public class QuineMcCluskey {
     static char stop_flag='F';
     //temp variable to input the minterms
     
-    //passedminterms y onholdminterms?????????
+   
     static String[] passed_minterms = new String[200];
     static String[] on_hold_minterms = new String[200];
     static int passed_index = 0;
@@ -94,7 +90,7 @@ public class QuineMcCluskey {
          while(stop_flag=='F')
          {
              System.out.println("Introduce los minterminos separados por <enter> y -1 cuando hayas terminado");
-        //  scan_minterms , metodo que .....
+    
              int_minterms= scan_minterms();
              Scanner s = new Scanner(System.in);
         
@@ -106,13 +102,12 @@ public class QuineMcCluskey {
    
                  int_dontcare=scan_minterms();
             
-            //si aqui intminterminos esta vacio por que scanminterms lo llenaba
-            //pero bueno hay que corregir eso....
+     
             
               } 
 //en si puedes poner s y cualquier otra letra para que ya pase a lo que sigue
 
-//bits es el numero de bits del mintermino mas grande
+//maxbits es el numero de bits del mintermino mas grande
               maxbits = get_maxbits(int_minterms);
               
          }
@@ -127,10 +122,6 @@ public class QuineMcCluskey {
        
        dontcares = to_binary(int_dontcare);
 
-       
-       
-       
-        //esto hace todo lo demas del metodo para obtener lo que sea 
         complete_methods();
     }
     
@@ -178,7 +169,7 @@ public class QuineMcCluskey {
                 else
                 {
                    System.out.println("\nIntroduzca solo numeros, vuelva a intentarlo\n");
-                  // System.out.println("Minternimo "+i+":\n");
+              
                    temp_array.set(i,scan.nextLine());
                 }
             }
@@ -257,7 +248,7 @@ public class QuineMcCluskey {
       // return_minterms = fill_1d_array(return_minterms);
 
         while (Integer.parseInt(min_array.get(a))!=-1) {
-            // supongo que convierte cada termino en binario...
+        .
             return_minterms.add(to_binary_string(Integer.parseInt(min_array.get(a)))) ;
             a++;
         }
@@ -279,7 +270,7 @@ public class QuineMcCluskey {
         
         ArrayList<ArrayList<String>> remaining_minterms =  new ArrayList<ArrayList<String>>();
         
-        //estos metodos los convierte todo a -1 osea.... 77
+
        // remaining_minterms = fill_arrays(remaining_minterms);
        // final_pass = fill_arrays(final_pass);         
 	//prime_calc = fill_arrays(prime_calc);        
@@ -307,9 +298,8 @@ public class QuineMcCluskey {
         final_pass = fill_minterms(minterms);
 
         //a partir de matriz de arrays acomodada por el numero de unos 
-        //se le pone valor a la variable primecalc
-        //que a mi psrecer es una matriz que alvergara la matriz de matrices de matrices
-        //ademas las guardara segun las interraciones, aqui se gurada la primera interracion
+        //se le pone valor a la variable primecal
+        //ademas las guardara segun las interraciones, aqui se guarda la primera interracion
 
        for (int i = 0; i < final_pass.size(); i++) {
             for (int j = 0; j < final_pass.get(i).size(); j++) 
@@ -338,9 +328,9 @@ public class QuineMcCluskey {
 				System.out.println("\n------");
 		}*/
                 
-                //tambien tienes que saber que hace fill dont care 
+               
 
-                //te da lo que es equivalente a finalpass pero para los
+                //fiildontcare te da lo que es equivalente a finalpass pero para los
                 //dont care ademas aqui sigue siendo un arreglo, no lo cambie 
                 //a arraylist
         pass_dontcare = fill_dontcare(dontcares);
@@ -348,8 +338,7 @@ public class QuineMcCluskey {
         //mientras no se encuentre que final_pass esta vacia 
         while(complete_flag != 'T')
         {
-            //este metodo de devuelvre otro array de arrays pero 
-            //supongo que modificado...
+            //este metodo de devuelvre otro array de arrays 
             final_pass=compare_adjacent_minterms(final_pass);
         }
         
@@ -383,12 +372,11 @@ public class QuineMcCluskey {
         //con solo un uno, en el segundo array los minterminos tiene dos unos y asi
         ArrayList<ArrayList<String>> group_wise = new ArrayList<ArrayList<String>>();
        
-        //llenando de -1 7.7
         // fill_arrays(group_wise);
         
-        //mientras el mintermino no sea negativo recorrelos...
-        //pero el ultimo -1 si se guarda segun tu akgoritmo?
-        //po que sino es asi esto se va a volver infinito...
+        //mientras el mintermino no sea -1 recorrelos...
+        //pero el ultimo -1 si se guarda segun tu algoritmo?
+        //por que sino es asi esto se va a volver infinito...
 
         while (input_min.get(a).equals("-1")==false) 
         {
