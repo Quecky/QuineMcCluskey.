@@ -1,0 +1,1243 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package quinemccluskey;
+
+import java.util.*;
+import java.io.*;
+import java.lang.*;
+import java.util.ArrayList;
+/**
+ *
+ * @author quecky
+ */
+public class QuineMcCluskey {
+//en esta clase lo mejor seria que solo estuviera el main con referencia
+    //a una sola clase que inicie el programa es decir el solo main con un 
+    //solo metodo
+    //
+    //
+    /**
+     * @param args the command line arguments
+     */
+    
+  
+    static ArrayList<String> minterms = new ArrayList<String>();
+    static ArrayList<String> dontcares = new ArrayList<String>();
+    static String check_list[] = new String[200];
+    
+    
+    static String[] pass_dontcare = new String[200];
+ 
+    static ArrayList<ArrayList<String>> track = new ArrayList<ArrayList<String>>();
+    static String[][] track2 = new String[100][100];
+    static ArrayList<ArrayList<String>> prime_calc = new ArrayList<ArrayList<String>>();
+    //array to store the minterms that is already covered
+    
+
+
+    static String[][] group_wise = new String[100][100];
+    //to keep track of backward minterms
+    static String[][] list_track = new String[200][3];
+    //to keep track of completed variables
+    static String[] done = new String[200];
+    static String[] undone = new String[200];
+    //to track the done[]'s index to store completed variables
+    static int term = 0;
+    
+    //array de subminterminos?.....
+    static String[] sub_minterms = new String[200];
+    static int sub_min_index = 0;
+    //index for main array
+    static int check_list_index;
+    //to check if process completed
+    static char complete_flag = 'F';
+    static char first_pass_flag = 'T';
+    //to check if this is the essential minterms
+    static int essential_flag = 0;
+    static char first_prime_flag = 'T';
+    //bandera de paro....
+    static char stop_flag='F';
+    //temp variable to input the minterms
+    
+    //passedminterms y onholdminterms?????????
+    static String[] passed_minterms = new String[200];
+    static String[] on_hold_minterms = new String[200];
+    static int passed_index = 0;
+    static int on_hold_index = 0;
+    //to keep track of tracking array's row and column
+    static int track_row = 0;
+    static int track_col = 0;
+
+    static int[] temp_array;
+
+    static String temp_min2;
+    static int maxbits = 0;
+    static int pass_index = 0;
+    static String[] first_list = new String[100];
+    static int ones = 0, twos = 0, threes = 0, fours = 0, fives = 0;
+
+    public static void main(String[] args) 
+    {
+        QuineMcCluskey QMC = new QuineMcCluskey();
+        QMC.iniciarMetodo();
+    }
+
+    public void iniciarMetodo()
+    {
+        char if_dontcares;  
+        ArrayList<String> int_minterms = new ArrayList <String>();
+        ArrayList<String> int_dontcare = new ArrayList <String>();
+        
+         while(stop_flag=='F')
+         {
+             System.out.println("Introduce los minterminos separados por <enter> y -1 cuando hayas terminado");
+        //  scan_minterms , metodo que .....
+             int_minterms= scan_minterms();
+             Scanner s = new Scanner(System.in);
+        
+             System.out.println("Hay condiciones dont care? (S/N)");
+             if_dontcares = s.next().charAt(0);
+             if (if_dontcares == 's' || if_dontcares == 'S')
+             {
+                 System.out.println("Introduce los dont care separados por <enter> y -1 cuando hayas terminado");
+   
+                 int_dontcare=scan_minterms();
+            
+            //si aqui intminterminos esta vacio por que scanminterms lo llenaba
+            //pero bueno hay que corregir eso....
+            
+              } 
+//en si puedes poner s y cualquier otra letra para que ya pase a lo que sigue
+
+//bits es el numero de bits del mintermino mas grande
+              maxbits = get_maxbits(int_minterms);
+              
+         }
+    
+       
+       // to binary convierte los dont care y minterminos a binario...
+       
+       
+       
+       
+       minterms = to_binary(int_minterms);
+       
+       dontcares = to_binary(int_dontcare);
+
+       
+       
+       
+        //esto hace todo lo demas del metodo para obtener lo que sea 
+        complete_methods();
+    }
+    
+        public static boolean isNumeric(String cadena) 
+        {
+
+             boolean resultado;
+
+             try {
+                   Integer.parseInt(cadena);
+                   resultado = true;
+             } catch (NumberFormatException excepcion) {
+            resultado = false;
+             }
+
+            return resultado;
+       }
+        
+    public static ArrayList<String> scan_minterms() {
+        int a = 0, b = 0;
+        Scanner scan = new Scanner(System.in);
+        
+        ArrayList <String> temp_array = new ArrayList<String>();
+        
+       // int[] temp_array = new int[200];
+       // temp_array = fill_1d_int_array(temp_array);  
+       
+       for(int i=0;i<1024;i++)
+       {  
+           // System.out.println("\nMinternimo "+i+":\n");
+            temp_array.add(scan.nextLine());
+            
+            if(temp_array.get(i).equals("-1"))
+            {
+                break;
+            }
+            int band =0;
+            while(band==0)
+            {
+                if(isNumeric(temp_array.get(i)))
+                {
+                        band=3;
+                }
+
+                else
+                {
+                   System.out.println("\nIntroduzca solo numeros, vuelva a intentarlo\n");
+                  // System.out.println("Minternimo "+i+":\n");
+                   temp_array.set(i,scan.nextLine());
+                }
+            }
+       }
+     
+        
+
+//aqui se imprime por primera vez la matriz....
+		System.out.println("--- Minterminos registrados ---\n");
+		for( int i=0; i < temp_array.size(); i++ ) {
+			if( temp_array.get(i).equals("-1")==false )
+				System.out.println("Mintermino "+i+ ": "+ temp_array.get(i) );
+		}
+		System.out.println("\n------");
+                return temp_array;
+	
+    }
+
+    //metodo que te regresa el numero dde bits del mintermino mas grande
+    public static int get_maxbits(ArrayList<String> min_array) {
+        int max = 0;
+        int a = 0;
+        int bits = 0;
+                
+        //este while busca al mintermino mas grande introducido
+        while (min_array.get(a).equals("-1")==false) {
+            if (Integer.parseInt(min_array.get(a) )>= max) {
+                max = Integer.parseInt(min_array.get(a));
+            }
+            a++;
+        }
+       
+        if (max == 1|| max==0) {
+            bits = 1;
+            stop_flag='C';
+        } else if (max > 1 && max < 4) {
+            bits = 2;
+            stop_flag='C';
+        } else if (max >= 4 && max < 8) {
+            bits = 3;
+            stop_flag='C';
+        } else if (max >= 8 && max < 16) {
+            bits = 4;
+            stop_flag='C';
+        } else if (max >= 16 && max < 32) {
+            bits = 5;
+            stop_flag='C';
+        } else if (max >= 32 && max < 64) {
+            bits = 6;
+            stop_flag='C';
+        } else if (max >= 65 && max <128){
+            bits = 7;
+            stop_flag='C';
+        } else if(max >=128 && max<256){
+            bits=8;
+            stop_flag='C';
+        } else if(max>=256 && max<512){
+            bits=9;
+            stop_flag='C';
+        }
+        else if (max>=512 && max<1024){
+            bits=10;
+            stop_flag='C';
+        }
+      
+        else {
+            System.out.println("Solo procesa minterminos menores a 1024, introduzca nuevamente los minterminos \n");
+            stop_flag = 'F';
+        }
+        return bits;
+    }
+
+    public static ArrayList<String> to_binary(ArrayList<String> min_array) {
+        int a = 0;
+        ArrayList<String> return_minterms = new ArrayList<String>();
+      // return_minterms = fill_1d_array(return_minterms);
+
+        while (Integer.parseInt(min_array.get(a))!=-1) {
+            // supongo que convierte cada termino en binario...
+            return_minterms.add(to_binary_string(Integer.parseInt(min_array.get(a)))) ;
+            a++;
+        }
+        
+        //aqui se imprime por segunda vez el arreglo...
+		System.out.println("--- Minterminos en binario ---");
+		for( int i=0; i < return_minterms.size(); i++ ) {
+			if( !return_minterms.get(i).equals("-1") )
+				System.out.println( return_minterms.get(i) );
+		}
+		System.out.println("\n------");
+
+        return return_minterms;
+    }
+
+    public static void complete_methods() {
+        int a = 0, b = 0;
+        ArrayList<ArrayList<String>> final_pass = new ArrayList<ArrayList<String>>();
+        
+        ArrayList<ArrayList<String>> remaining_minterms =  new ArrayList<ArrayList<String>>();
+        
+        //estos metodos los convierte todo a -1 osea.... 77
+       // remaining_minterms = fill_arrays(remaining_minterms);
+       // final_pass = fill_arrays(final_pass);         
+	//prime_calc = fill_arrays(prime_calc);        
+        pass_dontcare = fill_1d_array(pass_dontcare);
+        sub_minterms = fill_1d_array(sub_minterms);
+        
+        
+        
+        final_pass = fill_minterms(minterms);
+        track = final_pass;
+        while (minterms.get(a).equals("-1")==false) {
+            a++;
+        }
+
+        while (dontcares.get(b).equals("-1")==false) {
+            minterms.set(a,dontcares.get(b));
+            a++;
+            b++;
+        }
+
+        int chek = 0;
+        a = 0;
+        b = 0;
+        
+        final_pass = fill_minterms(minterms);
+
+        //a partir de matriz de arrays acomodada por el numero de unos 
+        //se le pone valor a la variable primecalc
+        //que a mi psrecer es una matriz que alvergara la matriz de matrices de matrices
+        //ademas las guardara segun las interraciones, aqui se gurada la primera interracion
+
+       for (int i = 0; i < final_pass.size(); i++) {
+            for (int j = 0; j < final_pass.get(i).size(); j++) 
+            {
+                if (!final_pass.get(i).get(j).equals("-1")) 
+                {
+                    prime_calc.get(b).set(0,final_pass.get(i).get(j)) ;
+                    b++;
+                }
+            }
+        }
+
+       //cuarta vez que se imprime la matriz Matriz acomodada segun el numero de unos de los minterminos ya se habia impreso
+       //es inecesario volverla a mprimir...
+       
+		/* System.out.println("--- SALIDA 2 ARREGLO final_pass[i][j] ---");
+		for( int i=0; i < final_pass.size(); i++ ) {
+			boolean hayValor = false;
+			for( int j=0; j < final_pass.get(i).size(); j++ ) {
+				if( !final_pass.get(i).get(j).equals("-1") ) {
+					System.out.print( final_pass.get(i).get(j) + " ");
+					hayValor = true;
+				}
+			}
+			if( hayValor )
+				System.out.println("\n------");
+		}*/
+                
+                //tambien tienes que saber que hace fill dont care 
+
+                //te da lo que es equivalente a finalpass pero para los
+                //dont care ademas aqui sigue siendo un arreglo, no lo cambie 
+                //a arraylist
+        pass_dontcare = fill_dontcare(dontcares);
+
+        //mientras no se encuentre que final_pass esta vacia 
+        while(complete_flag != 'T')
+        {
+            //este metodo de devuelvre otro array de arrays pero 
+            //supongo que modificado...
+            final_pass=compare_adjacent_minterms(final_pass);
+        }
+        
+        remove_duplicate_primes();
+        remaining_minterms = get_essential_primes();
+        if (!remaining_minterms.get(0).get(0).equals("-1")) {
+            remaining_minterms = get_primes(remaining_minterms);
+        }
+        
+        a=0;b=0;
+        
+        while(!prime_calc.get(a).get(0).equals("-1") && !prime_calc.get(a).get(0).equals("D")&& !prime_calc.get(a).get(0).equals("Y")){
+            sub_minterms[sub_min_index]=prime_calc.get(a).get(0);
+            sub_min_index++;
+            a++;
+        }
+
+   
+        give_output(sub_minterms);
+    }
+
+    //Este metodo ccrea un array de arrays donde los terminos de cada array estas en un array segun el numero de unos que se tenga 
+    public static  ArrayList<ArrayList<String>> fill_minterms(ArrayList<String> input_min) {
+        String temp_min;
+        int a = 0, count;
+        //estas variables van a ser como el numero de minterminos con un uno son los ones, con dos unos son los twos y asi
+        int ones = 0, twos = 0, threes = 0, fours = 0, fives=0, sixes=0, sevens=0,eights=0,nines=0,tens=0;
+       
+        //array que regresara
+        //array que contiene arrays donde el primer array contiene minterminos
+        //con solo un uno, en el segundo array los minterminos tiene dos unos y asi
+        ArrayList<ArrayList<String>> group_wise = new ArrayList<ArrayList<String>>();
+       
+        //llenando de -1 7.7
+        // fill_arrays(group_wise);
+        
+        //mientras el mintermino no sea negativo recorrelos...
+        //pero el ultimo -1 si se guarda segun tu akgoritmo?
+        //po que sino es asi esto se va a volver infinito...
+
+        while (input_min.get(a).equals("-1")==false) 
+        {
+
+            count = 0;
+            temp_min = input_min.get(a);
+
+         //mientras el mintermino sea menor al mintermino mas grande
+         //añadele ceros a esos espacion vacios....
+            while (temp_min.length() < maxbits) 
+            {
+                //supondre que esto funciona pero antes quiero verlo..
+                System.out.println("\n añadiendo ceros...");
+                temp_min = "0" + temp_min;
+                System.out.println(temp_min);
+            }
+            //cuando no hay dontcare truena en to binary 
+            //cuando hay dontcare truena aqui
+ System.out.println("termino el while....maxbits vale "+ maxbits);
+              //recorre los digitos del mintermino elegido al principio
+              //y cuenta los unos que tenga
+              System.out.println("¿¿acaso esto marca la primera excepcion? tempmin.length vale "+temp_min.length());
+            for (int i = 0; i < temp_min.length(); i++) 
+            {
+                 System.out.println("entro al for sin problemas, se esta a punto de comparar si esto "+temp_min.charAt(i)+" es igual a 1");
+               //despues de esto marca la excepcion
+                 
+                 if (temp_min.charAt(i) == '1') 
+                {
+                    count++;
+                    System.out.println("valor de count "+ count);
+                }
+            }
+
+            if (count == 0) 
+            {
+                System.out.println("comparo si el count vale 0");
+                group_wise.get(0).set(0, temp_min);
+            } 
+            else if (count == 1) 
+            {
+                 System.out.println("comparo si el count vale 1");
+                //aqui esta el error, este arraylist todavia esta vacio
+               group_wise.get(0).add(temp_min);
+       
+               //supongo    ue esto cuenta el numero de minterminos que solo tienen un uno
+               //mas bien modifica el indice del array para los proximos minterminos con solo 
+               //un uno
+                ones++;
+            } 
+            else if (count == 2) {
+                group_wise.get(2).set(twos, temp_min);
+                twos++;
+            } 
+            else if (count == 3) 
+            {
+                group_wise.get(3).set(threes, temp_min);
+                threes++;
+            } 
+            else if (count == 4) 
+            {
+                
+                group_wise.get(4).set(fours, temp_min);
+               
+                fours++;
+            } 
+            else if (count == 5) 
+            {
+               group_wise.get(5).set(fives, temp_min);
+             
+                fives++;
+            }
+            else if (count == 6) 
+            {
+               group_wise.get(6).set(sixes, temp_min);
+                sixes++;
+            }
+            
+           else if (count == 7) 
+           {
+               group_wise.get(7).set(sevens, temp_min);
+ 
+                sevens++;
+           }
+            else if (count == 8) 
+            {
+               group_wise.get(8).set(eights, temp_min);
+           
+                eights++;
+           }
+            else if (count == 9) 
+            {
+               group_wise.get(9).set(nines, temp_min);
+
+                nines++;
+           }
+            else if (count == 10) 
+            {
+               group_wise.get(10).set(tens, temp_min);
+                tens++;
+           }
+           
+            
+            a++;
+            
+        }
+
+
+///segun yo la tercera vez que se imprime la matriz.....
+		System.out.println("--- Matriz acomodada segun el numero de unos de los minterminos ---");
+		for( int i=0; i < group_wise.size(); i++ ) {
+			boolean hayValor = false;
+			for( int j=0; j < group_wise.get(i).size(); j++ ) {
+				if( !group_wise.get(i).get(j).equals( "-1" ) ) {
+					System.out.print(group_wise.get(i).get(j) + " ");
+					hayValor = true;
+				}
+			}
+			if( hayValor )
+				System.out.println("\n------");
+		}
+
+        return group_wise;
+    }
+
+    //metodo parecido a fillminterms pero para dontcare
+    public static String[] fill_dontcare(ArrayList<String> input_min) {
+        String[] group_wise_dontcare = new String[200];
+        group_wise_dontcare = fill_1d_array(group_wise_dontcare);
+        String temp_min;
+        int a = 0, count, b = 0;
+
+        while (input_min.get(a).equals("-1")==false) {
+            count = 0;
+            temp_min = input_min.get(a);
+
+            //es parecido a fill_minterms aqui se añade los ceros a los que 
+            //tengan menos de 10 bits 
+            while (temp_min.length() < maxbits) {
+                temp_min = "0" + temp_min;
+            }
+
+            group_wise_dontcare[b] = temp_min;
+            b++;
+            a++;
+        }
+
+
+        return group_wise_dontcare;
+    }
+
+    //metodo que ve si un mintermino difiere con otro de otro array en un solo digito
+    public static ArrayList<ArrayList<String>> compare_adjacent_minterms(ArrayList<ArrayList<String>> group_wise) {
+        ArrayList<ArrayList<String>> all_combined = new ArrayList<ArrayList<String>>();
+        int count = 0;
+        int index = 0;
+        int min_comp = 0, min_comp2 = 1, min_comp1 = 0, min_comp3 = 0;
+        int index1 = 0, index2 = 0;
+
+        count=group_wise.size();
+        
+        
+//si group wise tiene por lo menos un elemento
+        if(count >=1)
+        {
+            //mientras mincomp sea menor al tamaño de grupwize-1
+            //min comp va a recorrer todos los arrays que hay en group wize
+            //pero el -1 no lo veo necesario...
+              while (min_comp < group_wise.size()) 
+              {
+
+                  //mientras lo reccorrido no equivalga a -1
+                  //cuando encuentre el final o -1's 
+                  //va a cambiar los indices para ir por el siguiente array
+                  //y los indices que recorren los elementos del array empiezan en cero 
+                  //otra vez
+                while (!group_wise.get(min_comp).get(min_comp1).equals ("-1")) 
+                {
+                    while (!group_wise.get(min_comp2).get(min_comp3).equals("-1")) 
+                    {
+
+                         for (int ij = 0; ij < maxbits; ij++) 
+                         {
+                        
+                        //aqui lo que hace es recorrer los 10 bits de un miebro de arrays de arrays
+                        //y ver si es igual a otro que otro array que se recorren 
+                        //sus bits al mism0 tiempo
+                        //si no son iguales count aumenta e index toma el valor del indice del
+                        //bit donde fueron diferentes los minterminos 
+                        
+                        //aqui necesito saber que significa esto y como sacar de bit en bit, mientras...
+                       //System.out.println(group_wise.get(min_comp).get(min_comp1) +" vs "+ group_wise.get(min_comp2).get(min_comp3));
+                             if (group_wise.get(min_comp).get(min_comp1).charAt(ij) != group_wise.get(min_comp2).get(min_comp3).charAt(ij)) 
+                             {
+                                 //me parece que count esta tratando de contar los que encuentra 
+                                 //con adyasencia 
+                                 
+                                 //count cuenta el numero de bits que tienen diferentes un mintermino y otro 
+                                 //si tiene mas de una diferencia no se guarda en 
+                                 //la nueva matriz 
+                                 //sin embargo los implicantees primos
+                                 //los que tienen adyasencia entre si
+                                 //son los que al final conforman a la funcion...
+                                 count++;
+                                 index = ij;
+                            }
+                        }
+
+                    ///si un bit fue diferente entonces se lllena la matriz
+                    //creada al principio
+                         if (count == 1) 
+                         {
+
+                              all_combined.get(index1).set(index2, group_wise.get(min_comp2).get(min_comp3).substring(0, index) +'x' + group_wise.get(min_comp2).get(min_comp3).substring(index + 1, maxbits) );
+                       
+                        //un metodo mas a explorar 
+                              prime_fill(all_combined.get(index1).get(index2),group_wise.get(min_comp).get(min_comp1), group_wise.get(min_comp2).get(min_comp3));
+                              index2++;
+
+                         }
+                         //si se llega hasta aqui se termina el proceso 
+                         //auqnue ciertamentre solo se pasaria una vez 
+                         //pues no hay ningun while antes del if por lo que el 
+                         //cambio de count no afecta al if del principio
+                         //se pone count cero para que con el nuevo mintermino
+                         //vuelva 
+                         count = 0;
+                         min_comp3++;
+
+
+                     }
+
+                     min_comp3 = 0;
+
+                     min_comp1++;
+
+
+
+
+                 }
+
+               min_comp++;
+               min_comp2++;
+               min_comp1 = 0;
+           
+               index1++;
+            
+               index2 = 0;
+               min_comp3 = 0;
+
+            }
+              //al terminar todos los procesos se manda el valor del banderin 
+              //que indica que lo mandado no esta vacio..
+            first_prime_flag='F';
+        }
+
+        else complete_flag= 'T';
+//quinta vez que se imprime la matriz pero en si se imprime una matriz 
+//con puros -1 no tiene chiste....
+//aqui se deberia imprimir la matriz despues del proceso lo malo es que nunca entra 
+//al proceso...
+		System.out.println("--- SALIDA ARREGLO all_combined[i][j] ---");
+		for( int i=0; i < all_combined.size(); i++ )
+                {
+			boolean hayValor = false;
+			for( int j=0; j < all_combined.get(i).size(); j++ ) {
+				if( !all_combined.get(i).get(j).equals( "-1" ) ) {
+					System.out.print( all_combined.get(i).get(j) + " ");
+					hayValor = true;
+				}
+			}
+			if( hayValor )
+				System.out.println("\n------");
+		}
+                
+	return all_combined;
+        
+    }
+
+    //metodo que modifica a prime_calc segun el resultado obtenido que se mando 
+    //y si en prime calc hay terminos iguales a los mandados en op1 y op2
+    //iguales a los mandados a 
+    public static void prime_fill(String result, String op1, String op2) {
+
+        int a = 0, b = 0, j = 1;
+        if (first_prime_flag == 'T')
+        {
+            for (int i = 0; i < prime_calc.size(); i++) 
+            {
+
+                if (prime_calc.get(i).get(0).equals(op1) || prime_calc.get(i).get(0).equals(op2)) 
+                {
+
+                    while (!prime_calc.get(i).get(j).equals("-1")) 
+                    {
+                        j++;
+                    }
+                    prime_calc.get(i).set(j,result);
+                    j = 1;
+                }
+
+
+            }
+        } 
+        else 
+        {
+
+
+            for (int m = 0; m < prime_calc.size(); m++)
+            {
+                for (int n = 0; n < prime_calc.get(m).size(); n++)
+                {
+                    if (prime_calc.get(m).get(n).equals(op1) || prime_calc.get(m).get(n).equals(op2))
+                    {
+
+                        prime_calc.get(m).set(n, result);
+
+                    }
+                }
+
+            }
+
+        }
+    }
+
+    public static void remove_duplicate_primes() {
+        int prime_calc_index = 0, current_index = 1, check_index = 2, temp_check_index = 0;
+        int row_index = 0, dontcare_index = 0;
+        String checking_term;
+        
+
+        while (!prime_calc.get(prime_calc_index).get(0).equals("-1")) {
+            checking_term = prime_calc.get(prime_calc_index).get(current_index);
+
+            while (!prime_calc.get(prime_calc_index).get(current_index).equals("-1")) {
+                check_index = current_index + 1;
+                while (!prime_calc.get(prime_calc_index).get(check_index).equals("-1")) {
+                    temp_check_index = check_index;
+
+
+
+                    if (prime_calc.get(prime_calc_index).get(current_index).equals(prime_calc.get(prime_calc_index).get(check_index))) {
+
+
+                        while (!prime_calc.get(prime_calc_index).get(temp_check_index).equals("-1")) {
+                            prime_calc.get(prime_calc_index).set(temp_check_index,prime_calc.get(prime_calc_index).get(temp_check_index + 1)) ;
+                            temp_check_index++;
+                        }
+
+                        //realmente no me super agrada la idea de piner -1's por todos lados 7,7
+                        prime_calc.get(prime_calc_index).set(temp_check_index,"-1");
+                        check_index--;
+                    }
+
+
+
+                    check_index++;
+                }
+                current_index++;
+            }
+
+
+            current_index = 1;
+            check_index = 2;
+            prime_calc_index++;
+        }
+
+        
+    }
+
+    //ahpra se ve adyacencia con dont care y se ponen "d" y "y" todavia no
+    //entiendo por que .c.
+    //creo que todo es con el fin de volver a refinar el proceso de los primos
+    //si supongo que saca a los que no estan palomeados
+    //en primcalc metimos los que estaban palomeados
+    //su`ongo que temp`imecal se guardan aquellos que no tenian adyasencia 
+    //con nada....
+    public static ArrayList<ArrayList<String>> get_essential_primes() {
+        int i = 0, j = 0, count = 0;
+        int a = 0, b = 0;
+        sub_min_index = 0;
+        String[] temp_back = new String[100];
+        temp_back = fill_1d_array(temp_back);
+        int temp_back_index = 0;
+        int k = 0;
+
+        ArrayList<ArrayList<String>> temp_prime_calc = new ArrayList<ArrayList<String>> ();
+        
+       // temp_prime_calc = fill_arrays(temp_prime_calc);
+
+        
+        
+///compara los minterminos ordenados de dont care con lo que hay en primecalc
+        while (!prime_calc.get(i).get(0).equals("-1")) {
+            while (pass_dontcare[j] != "-1") {
+                if (prime_calc.get(i).get(0).equals(pass_dontcare[j])) 
+                {
+                    //pero .. ¿por que pone D y Y?
+                    prime_calc.get(i).set(0,"D");
+                }
+                j++;
+            }
+            j = 0;
+            i++;
+        }
+
+
+
+        i = 0;
+        j = 0;
+        while (prime_calc.get(i).get(0).equals("-1"))
+        {
+            //si hay siguiente... de alguna forma
+            if (prime_calc.get(i).get(2).equals("-1") && !prime_calc.get(i).get(0).equals("D") && !prime_calc.get(i).get(0).equals("-1"))
+            {
+                sub_minterms[sub_min_index] = prime_calc.get(i).get(0);
+                sub_min_index++;
+
+                while (!prime_calc.get(a).get(0).equals("-1")) {
+                    while (!prime_calc.get(a).get(b).equals("-1")) {
+                        if (prime_calc.get(a).get(b).equals(prime_calc.get(i).get(1)))
+                        {
+                            prime_calc.get(a).set(0,"Y");
+                        }
+
+                        b++;
+                    }
+                    b = 0;
+                    a++;
+                }
+                a = 0;
+                b = 0;
+
+            }
+            i++;
+        }
+
+
+        
+
+        
+
+        a = 0;
+        b = 0;
+        int c = 0, d = 0;
+        while (!prime_calc.get(a).get(0).equals("-1")) {
+            if (!prime_calc.get(a).get(0).equals("D") && !prime_calc.get(a).get(0).equals("Y") ) {
+                while (!prime_calc.get(a).get(b).equals("-1")) {
+                    temp_prime_calc.get(c).set(d, prime_calc.get(a).get(b));
+                    b++;
+                    d++;
+
+
+                }
+                c++;
+            }
+            a++;
+
+            b = 0;
+            d = 0;
+        }
+
+        /*
+		System.out.println("--- SALIDA ARREGLO temp_prime_calc[index_i][index_j] ---");
+		for( int index_i=0; index_i < temp_prime_calc.length; index_i++ ) {
+			for( int index_j=0; index_j < temp_prime_calc[index_i].length; index_j++ ) {
+				if( !temp_prime_calc[index_i][index_j].equals( "-1" ) )
+					System.out.print( temp_prime_calc[index_i][index_j] + " ");
+			}
+			System.out.println("\n------");
+		}
+		*/
+        
+        return temp_prime_calc;
+
+
+    }
+
+    //metodo que ya deberia obtener todos los primos que no
+    //se rejuntaron con nada 
+    
+    public static ArrayList<ArrayList<String>> get_primes(ArrayList<ArrayList<String>> temp_prime_calc) {
+        int x = 0, a = 0, b = 1, c = 0, d = 0, i = 0;
+        int count = 0;
+        String max_minterm;
+        int max_index = 0;
+       ArrayList<String> primes = new ArrayList<String> ();
+        //primes = fill_1d_array(primes);
+
+        int[] prime_count = new int[100];
+        prime_count = fill_1d_int_array(prime_count);
+
+        ArrayList<ArrayList<String>> temp_prime_calc2 = new ArrayList<ArrayList<String>>();
+      //  temp_prime_calc2 = fill_arrays(temp_prime_calc2);
+
+
+
+
+        while (!temp_prime_calc.get(a).get(0).equals("-1")) {
+            while (!temp_prime_calc.get(a).get(b).equals("-1")) {
+                primes.add(temp_prime_calc.get(a).get(b));
+                b++;
+                i++;
+            }
+            a++;
+        }
+        
+       
+        a = 0;
+        i = 0;
+        //todo esto para solo contar los primos, que no sean -1 7,7
+        while (!primes.get(i).equals("-1")) {
+            while (!temp_prime_calc.get(a).get(0).equals("-1")) {
+                while (!temp_prime_calc.get(a).get(b).equals("-1")) {
+                    if (primes.get(i).equals(temp_prime_calc.get(a).get(b))) 
+                    {
+                        count++;
+                        b = 1;
+                        break;
+                    }
+
+                    b++;
+                }
+                b = 1;
+                a++;
+            }
+            a = 0;
+            b = 1;
+            i++;
+            prime_count[c] = count;
+            count = 0;
+            c++;
+        }
+
+        count = 0;
+        c = 0;
+        while (prime_count[c] != -1) {
+            if (prime_count[c] > count) {
+                count = prime_count[c];
+                max_index = c;
+            }
+            c++;
+        }
+        a = 0;
+        b = 1;
+        max_minterm = primes.get(max_index);
+        if(max_minterm !="-1"){
+        sub_minterms[sub_min_index] = max_minterm;
+        sub_min_index++;
+        }
+        
+       
+
+        while (!temp_prime_calc.get(a).get(0).equals("-1")) {
+            while (!temp_prime_calc.get(a).get(b).equals("-1")) {
+                if (temp_prime_calc.get(a).get(b).equals(max_minterm)) {
+                    temp_prime_calc.get(a).set(0,"Y");
+                }
+
+                b++;
+            }
+            b = 0;
+            a++;
+        }
+
+        a = 0;
+        b = 0;
+        c = 0;
+        d = 0;
+        
+        while (!prime_calc.get(a).get(0).equals("-1")) {
+            while (!prime_calc.get(a).get(b).equals("-1")) {
+                if (prime_calc.get(a).get(b).equals(max_minterm)) {
+                    prime_calc.get(a).set(0,"Y");
+                }
+
+                b++;
+            }
+            b = 0;
+            a++;
+        }
+        
+        a = 0;
+        b = 0;
+        c = 0;
+        d = 0;
+        while (!temp_prime_calc.get(a).get(0).equals("-1")) {
+            if (!temp_prime_calc.get(a).get(0).equals("Y")) {
+                while (!temp_prime_calc.get(a).get(b).equals("-1")) {
+                    temp_prime_calc2.get(c).set(d,temp_prime_calc.get(a).get(b));
+                    b++;
+                    d++;
+
+
+                }
+                c++;
+            }
+            a++;
+
+            b = 0;
+            d = 0;
+        }
+        //segun yo seria la sexta vez que se imprime la ,atriz
+
+		System.out.println("--- SALIDA ARREGLO temp_prime_calc2[i][j] yo diria que son los implicamtes primos---");
+		for( int index_i=0; index_i < temp_prime_calc2.size(); index_i++ ) {
+			for( int j=0; j < temp_prime_calc2.get(index_i).size(); j++ ) {
+				System.out.print( temp_prime_calc2.get(index_i).get(j) + " ");
+			}
+			System.out.println("\n------");
+		}
+
+        return temp_prime_calc2;
+
+
+
+    }
+
+    public static void give_output(String[] output_array) {
+
+        int temp_pass_index;
+        int output_array_index = 0;
+        int h = 0;
+        int count = 0;
+        temp_pass_index = pass_index;
+        String[] minimized_array = new String[200];
+        fill_1d_array(minimized_array);
+        int min_comp = 0, min_comp2 = 0, min_comp1 = 0, min_comp3 = 0;
+        int minimized_index = 0;
+        String output_string = "";
+
+        
+
+        String temp_minterm = "";
+
+        int sub_min_index = 0;
+        String final_output = "";
+        String temp_minterm_check = "";
+        int i = 0;
+
+        while (output_array[i] != "-1") {
+            for (int ij = maxbits - 1; ij >= 0; ij--) {
+
+                if (output_array[i].charAt(ij) != 'x') {
+
+                    if (output_array[i].charAt(ij) == '0') {
+                        if (ij == 0) {
+                            temp_minterm_check = "a";
+                        }
+                        if (ij == 1) {
+                            temp_minterm_check = "b";
+                        }
+                        if (ij == 2) {
+                            temp_minterm_check = "c";
+                        }
+                        if (ij == 3) {
+                            temp_minterm_check = "d";
+                        }
+                        if (ij == 4) {
+                            temp_minterm_check = "e";
+                        }
+                        if (ij == 5) {
+                            temp_minterm_check = "f";
+                        }
+                        if (ij == 6) {
+                            temp_minterm_check = "g";
+                        }
+                        if (ij == 7) {
+                            temp_minterm_check = "h";
+                        }
+                        if (ij == 8) {
+                            temp_minterm_check = "i";
+                        }
+                        if (ij == 9) {
+                            temp_minterm_check = "j";
+                        }
+                        if (ij == 10) {
+                            temp_minterm_check = "k";
+                        }
+                        if (ij == 11) {
+                            temp_minterm_check = "l";
+                        }
+                        if (ij == 12) {
+                            temp_minterm_check = "m";
+                        }
+                        if (ij == 13) {
+                            temp_minterm_check = "n";
+                        }
+                    }
+                    if (output_array[i].charAt(ij) == '1') {
+
+                        if (ij == 0) {
+                            temp_minterm_check = "A";
+                        }
+                        if (ij == 1) {
+                            temp_minterm_check = "B";
+                        }
+                        if (ij == 2) {
+                            temp_minterm_check = "C";
+                        }
+                        if (ij == 3) {
+                            temp_minterm_check = "D";
+                        }
+                        if (ij == 4) {
+                            temp_minterm_check = "E";
+                        }
+                        if (ij == 5) {
+                            temp_minterm_check = "F";
+                        }
+                        if (ij == 6) {
+                            temp_minterm_check = "G";
+                        }
+                        if (ij == 7) {
+                            temp_minterm_check = "H";
+                        }
+                        if (ij == 8) {
+                            temp_minterm_check = "I";
+                        }
+                        if (ij == 9) {
+                            temp_minterm_check = "J";
+                        }
+                        if (ij == 10) {
+                            temp_minterm_check = "K";
+                        }
+                        if (ij == 11) {
+                            temp_minterm_check = "L";
+                        }
+                        if (ij == 12) {
+                            temp_minterm_check = "M";
+                        }
+                        if (ij == 13) {
+                            temp_minterm_check = "M";
+                        }
+                        
+                        
+
+                    }
+                    temp_minterm = temp_minterm_check + temp_minterm;
+
+                }
+            }
+
+
+            i++;
+
+
+            for (int j = 0; j < minimized_array.length; j++) {
+
+                if (minimized_array[j].equals(temp_minterm)) {
+                    count++;
+                }
+            }
+
+            if (count == 0) {
+                minimized_array[minimized_index] = temp_minterm;
+                minimized_index++;
+            }
+            temp_minterm = "";
+            count = 0;
+
+
+        }
+        i = 0;
+
+
+        minimized_index = 0;
+        while (minimized_array[minimized_index] != "-1") {
+            output_string = output_string + "+" + minimized_array[minimized_index];
+            minimized_index++;
+        }
+        output_string = output_string.substring(1, output_string.length());
+
+        //quinta vez y creo que ultima que se imrpime lo que sea...
+		System.out.println("--- SALIDA 4 (RESULTADO) output_string ---");
+        System.out.println("\n" + output_string);
+
+    }
+
+    
+    
+    //todos estos metodos de aqui llenan con -1 .. no estoy segura de dejarlos...
+    
+    
+    
+    public static String[][] fill_dontcares(String[][] filling_array) {
+        int filling_array_index = 0;
+        int final_pass_dontcare_index = 0;
+        while (pass_dontcare[final_pass_dontcare_index] != "-1") {
+            for (int i = 0; i < filling_array.length; i++) {
+                for (int j = 0; j < filling_array[i].length; j++) {
+                    if (pass_dontcare[final_pass_dontcare_index].equals(filling_array[i][j])) {
+                        filling_array[i][j] = "-1";
+
+                    }
+                }
+            }
+            final_pass_dontcare_index++;
+        }
+        return filling_array;
+    }
+
+    public static ArrayList<ArrayList> fill_arrays(ArrayList<ArrayList> all_combined) {
+        for (int i = 0; i < all_combined.size(); i++) {
+            for (int j = 0; j < all_combined.get(i).size(); j++) {
+                all_combined.get(i).set(j,"-1");
+            }
+        }
+
+        return all_combined;
+    }
+
+    public static int[][] fill_int_arrays(int[][] all_combined) {
+        for (int i = 0; i < all_combined.length; i++) {
+            for (int j = 0; j < all_combined[i].length; j++) {
+                all_combined[i][j] = -1;
+            }
+        }
+
+        return all_combined;
+    }
+
+    public static String[] fill_1d_array(String[] filling_array) {
+        for (int i = 0; i < filling_array.length; i++) {
+            filling_array[i] = "-1";
+        }
+        return filling_array;
+    }
+
+    //este metodo solo convierte todo el array en -1 :v
+    public static int[] fill_1d_int_array(int[] temp_array) {
+
+        for (int i = 0; i < temp_array.length; i++) {
+            temp_array[i] = -1;
+        }
+
+        return temp_array;
+    }
+    
+    //metodo que convierte un numero a binario
+    public static String to_binary_string(int integer_val){
+        int quotient=integer_val,remainder;
+        String result="";
+       while(quotient != 0){
+           
+           remainder=quotient%2;
+           quotient=quotient/2;
+           result=Integer.toString(remainder)+result;
+       }
+       return result;
+    }
+
+}
