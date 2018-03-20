@@ -13,7 +13,7 @@ import java.lang.*;
 
 public class QuineMcCluskey {
 
-    //array to store the minterms in each pass
+
     static String[] minterms = new String[200];
     static String[] dontcares = new String[200];
     static String check_list[] = new String[200];
@@ -23,43 +23,39 @@ public class QuineMcCluskey {
     static String[][] track = new String[100][100];
     static String[][] track2 = new String[100][100];
     static String[][] prime_calc = new String[100][100];
-    //array to store the minterms that is already covered
+
     
-    //array to store the input minterms according to the number of 1 bits
+
     static String[][] group_wise = new String[100][100];
-    //to keep track of backward minterms
+
     static String[][] list_track = new String[200][3];
-    //to keep track of completed variables
+
     static String[] done = new String[200];
     static String[] undone = new String[200];
-    //to track the done[]'s index to store completed variables
+
     static int term = 0;
     static String[] sub_minterms = new String[200];
     static int sub_min_index = 0;
-    //index for main array
+ 
     static int check_list_index;
-    //to check if process completed
+
     static char complete_flag = 'F';
     static char first_pass_flag = 'T';
-    //to check if this is the essential minterms
+  
     static int essential_flag = 0;
     static char first_prime_flag = 'T';
     static char stop_flag='F';
-    //temp variable to input the minterms
+   
     static String[] passed_minterms = new String[200];
     static String[] on_hold_minterms = new String[200];
     static int passed_index = 0;
     static int on_hold_index = 0;
-    //to keep track of tracking array's row and column
+
     static int track_row = 0;
     static int track_col = 0;
-    // static int max_minterm;
-    // static int number_of_bits = 0;
-    //static int combined_row = -1;
-    //static int combined_column = -1;
-    //static int number_of_variables_required;
+
     static int[] temp_array;
-    // static String [] minterms;
+
     static String temp_min2;
     static int bits = 0;
     static int pass_index = 0;
