@@ -9,387 +9,439 @@ import java.util.*;
 import java.io.*;
 import java.lang.*;
 
-//las minusculas son las negadas
+///las minusculas son las negadas
 
 public class QuineMcCluskey {
 
-
-    static String[] minterms = new String[200];
+    //representan un arreglo de ceros y unos de los minterminos y dontcare
+    //ingresados al principio del programa
+    static String[] minterminos = new String[200];
     static String[] dontcares = new String[200];
-    static String check_list[] = new String[200];
+
+      //maxbitsdontcare representa los dontcare en binario con el maximo numero 
+        //de bits disponible dado por la variable maxbits
     
+    static String[] maxbitsdontcare = new String[200];
+    static int maxbits = 0;
     
-    static String[] pass_dontcare = new String[200];
-    static String[][] track = new String[100][100];
-    static String[][] track2 = new String[100][100];
-    static String[][] prime_calc = new String[100][100];
+    static String[][] calculadorprimos = new String[100][100];
 
-    
+///guarda a los minterminos despues de haber comparado su adyasencia es por 
+    //eso que tiene una rayita simbolizando la busqueda  y el ecnuentro de la adyacenncia 
+    //y la simplicacion de dos terminos en comun con un bit 
+    static String[] m_terminos = new String[200];
+    static int inicesubmin = 0;
 
-    static String[][] group_wise = new String[100][100];
-
-    static String[][] list_track = new String[200][3];
-
-    static String[] done = new String[200];
-    static String[] undone = new String[200];
-
-    static int term = 0;
-    static String[] sub_minterms = new String[200];
-    static int sub_min_index = 0;
  
-    static int check_list_index;
+    //variable para checar si un proceso se ha llevado a cabo
+    static char banderin = 'F';
+    static char primerprimoband = 'T';
+    static char bandeparar='F';
 
-    static char complete_flag = 'F';
-    static char first_pass_flag = 'T';
-  
-    static int essential_flag = 0;
-    static char first_prime_flag = 'T';
-    static char stop_flag='F';
-   
-    static String[] passed_minterms = new String[200];
-    static String[] on_hold_minterms = new String[200];
-    static int passed_index = 0;
-    static int on_hold_index = 0;
+ 
 
-    static int track_row = 0;
-    static int track_col = 0;
 
-    static int[] temp_array;
+ 
 
-    static String temp_min2;
-    static int bits = 0;
-    static int pass_index = 0;
-    static String[] first_list = new String[100];
-    static int ones = 0, twos = 0, threes = 0, fours = 0, fives = 0;
-
-    public static void main(String[] args) {
-        char if_dontcares;
-        int[] int_minterms = new int[200];
-        
-        int[] int_dontcares = new int[200];
-        
-        Scanner s = new Scanner(System.in);
-        
-       while(stop_flag=='F'){
-        int_minterms = fill_1d_int_array(int_minterms);
-        int_dontcares = fill_1d_int_array(int_dontcares);
-        System.out.println("Introduce los minterminos separados por <enter> y -1 cuando hayas terminado");
-        int_minterms = scan_minterms();
-
-        
-        System.out.println("Hay condiciones dont care? (S/N)");
-        if_dontcares = s.next().charAt(0);
-        if (if_dontcares == 's' || if_dontcares == 'S')
-        {
-            System.out.println("Introduce los dont care separados por <enter> y -1 cuando hayas terminado");
-            int_dontcares = scan_dontcare();
-            
-            System.out.println("--- Minterminos dontcare en binario ---\n"
-                    + "n");
-              dontcares = to_binary(int_dontcares); 
-            
-        } 
-
-        bits = get_bits(int_minterms);
-       }
-       System.out.println("--- Minterminos en binario ---\n");
-        minterms = to_binary(int_minterms);
-      
-           
-  
-    
-
-        complete_methods();
+    public static void main(String[] args) 
+    {
+        QuineMcCluskey QMC = new QuineMcCluskey();
+        QMC.iniciarMetodo();
     }
 
-    public static int[] scan_minterms() {
-        int a = 0, b = 0;
-        Scanner scan = new Scanner(System.in);
-
-        int[] temp_array = new int[200];
-        temp_array = fill_1d_int_array(temp_array);
-        a = 0;
-
-        int input_minterms;
+    public void iniciarMetodo()
+    {
+        Scanner s = new Scanner(System.in);
+        char siono;
         
-        while ((input_minterms = scan.nextInt()) != -1) 
+        //arreglos que guardan los minterminos y dontcare introducidos por el usuario
+        //en recogerminterminos y recogerdontcare
+        int[] minint = new int[200];
+        int[] dcint = new int[200];
+        minint = inicializararrayint(minint);
+        dcint = inicializararrayint(dcint);
+        
+        //mientras la bandera de parar valga F o falso se continuara con 
+        //el proceso de preguntar al usuario 
+        //el proceso para al obtener el maximo de bits de todos los minterminos
+        //introducidos ya que se llega a esa funcion cuando el usuario introdujo todo correctamente
+        //bandeparar se volvera C o correcto 
+        
+       while(bandeparar=='F')
+       {
+        
+           System.out.println("Hola introduce los minterminos separados por 'enter' y teclea -1 cuando hayas acabado");
+            minint = recogerminterminos();
+
+        
+            System.out.println("Hay condiciones dont care? Si si oprimir s o S sino oprimir cualquier tecla");
+            siono = s.next().charAt(0);
+            if (siono == 's' || siono == 'S') 
+            {
+            System.out.println("Introduce los dont care separados por 'enter' y teclea -1 cuando hayas acabado");
+            dcint = recogerdontcare();
+     
+            
+            } 
+
+            maxbits = obtenermaximodebits(minint);
+       }
+       
+       System.out.println("--- minterminos convertidos a binario ---\n");
+        minterminos = obtenerarreglobinariostr(minint);
+       System.out.println("--- dontcare convertidos a binario ---\n");
+        dontcares = obtenerarreglobinariostr(dcint);
+
+        terminarmetodo();
+    }
+    
+
+    //pregunta al usuario los minterminos, los imprime y los devuelve en forma de matriz de enteros
+    public static int[] recogerminterminos() 
+    {
+        int  indt = 0;
+        
+        int[] temporal = new int[200];
+        temporal = inicializararrayint(temporal);
+        
+        Scanner scan = new Scanner(System.in);
+        int minusuario;
+        
+        while ((minusuario = scan.nextInt()) != -1) 
         {
-            temp_array[b] = input_minterms;
-            b++;
+            temporal[indt] = minusuario;
+            indt++;
         }
 
 		System.out.println("--- Minterminos registrados ---\n");
-		for( int i=0; i < temp_array.length; i++ ) {
-			if( temp_array[i] != -1 )
-				System.out.println("Mintermino "+i+ ": "+ temp_array[i] );
+		for( int i=0; i < temporal.length; i++ ) {
+			if( temporal[i] != -1 )
+				System.out.println("Mintermino "+i+ ": "+ temporal[i] );
 		}
 		System.out.println("\n------");
 
-		return temp_array;
+		return temporal;
     }
     
-      public static int[] scan_dontcare() {
-        int a = 0, b = 0;
+      public static int[] recogerdontcare() 
+      {
+        int indice= 0;
         Scanner scan = new Scanner(System.in);
 
-        int[] temp_array = new int[200];
-        temp_array = fill_1d_int_array(temp_array);
-        a = 0;
+        int[] arrayt = new int[200];
+        arrayt = inicializararrayint(arrayt);
+      
 
-        int input_minterms;
+        int minusuario;
         
-        while ((input_minterms = scan.nextInt()) != -1) 
+        while ((minusuario = scan.nextInt()) != -1) 
         {
-            temp_array[b] = input_minterms;
-            b++;
+            arrayt[indice] = minusuario;
+            indice++;
         }
 
 		System.out.println("--- Minterminos Dontcare registrados ---\n");
-		for( int i=0; i < temp_array.length; i++ ) {
-			if( temp_array[i] != -1 )
-				System.out.println("dontcare "+i+ ": "+ temp_array[i] );
+		for( int i=0; i < arrayt.length; i++ ) {
+			if( arrayt[i] != -1 )
+				System.out.println("dontcare "+i+ ": "+ arrayt[i] );
 		}
 		System.out.println("\n------");
 
-		return temp_array;
+		return arrayt;
     }
-
-
-    public static int get_bits(int[] min_array) {
-        int max = 0;
-        int a = 0;
-        int bits = 0;
-        while (min_array[a] != -1) {
-            if (min_array[a] > max) {
-                max = min_array[a];
+      
+      //este metodo revisa todos los terminos para saber cual es el maximo numero
+      //de bits a manejar en nuestro arreglo de minterminos binarios
+      //con este metodo se decide el numero maximo de variables en este caso
+      //tiene un maximo de 10 variables 
+    public static int obtenermaximodebits(int[] minenteros) 
+    {
+        //f de falso t c ee correcto, falso que no se para y correcto que se pare el proceso
+        int minmax = 0;
+        int indiceint = 0;
+        int bitmaximo = 0;
+        
+       //este while busca al mintermino mas grande introducido
+        while (minenteros[indiceint] != -1)
+        {
+            if (minenteros[indiceint] > minmax) 
+            {
+                minmax = minenteros[indiceint];
             }
-            a++;
+            indiceint++;
         }
-        if (max == 0) {
-            bits = 0;
-            stop_flag='C';
-        } else if (max == 1) {
-            bits = 1;
-            stop_flag='C';
-        } else if (max > 1 && max < 4) {
-            bits = 2;
-            stop_flag='C';
-        } else if (max >= 4 && max < 8) {
-            bits = 3;
-            stop_flag='C';
-        } else if (max >= 8 && max < 16) {
-            bits = 4;
-            stop_flag='C';
-        } else if (max >= 16 && max < 32) {
-            bits = 5;
-            stop_flag='C';
-        } else if (max >= 32 && max < 64) {
-            bits = 6;
-            stop_flag='C';
-        } else if (max >= 65 && max <128){
-            bits = 7;
-            stop_flag='C';
-        } else if(max >=128 && max<256){
-            bits=8;
-            stop_flag='C';
-        } else if(max>=256 && max<512){
-            bits=9;
-            stop_flag='C';
+        
+        if (minmax == 1|| minmax==0)
+        {
+            bitmaximo = 1;
+            bandeparar='C';
+        } else if (minmax > 1 && minmax < 4) 
+        {
+            bitmaximo = 2;
+            bandeparar='C';
+        } else if (minmax >= 4 && minmax < 8) 
+        {
+            bitmaximo = 3;
+            bandeparar='C';
+        } else if (minmax >= 8 && minmax < 16) 
+        {
+            bitmaximo = 4;
+            bandeparar='C';
+        } else if (minmax >= 16 && minmax < 32) 
+        {
+            bitmaximo = 5;
+            bandeparar='C';
+        } else if (minmax >= 32 && minmax < 64) 
+        {
+            bitmaximo = 6;
+            bandeparar='C';
+        } else if (minmax >= 65 && minmax <128)
+        {
+            bitmaximo = 7;
+            bandeparar='C';
+        } else if(minmax >=128 && minmax<256)
+        {
+            bitmaximo=8;
+            bandeparar='C';
+        } else if(minmax>=256 && minmax<512)
+        {
+            bitmaximo=9;
+            bandeparar='C';
         }
-        else if (max>=512 && max<1024){
-            bits=10;
-            stop_flag='C';
+        else if (minmax>=512 && minmax<1024)
+        {
+            bitmaximo=10;
+            bandeparar='C';
         }
     
         else {
-            System.out.println("Solo procesa minterminos menores a 1024\n");
-            stop_flag = 'F';
+            System.out.println("Solo se aceptan minterminos menores a 1024");
+            bandeparar = 'F';
         }
-        return bits;
+        return bitmaximo;
     }
+    
+    //metodo que crea una matriz string binaria a partir del array de minterminos enteros
 
-    public static String[] to_binary(int[] min_array) {
-        int a = 0;
-        String return_minterms[] = new String[200];
-        return_minterms = fill_1d_array(return_minterms);
+    public static String[] obtenerarreglobinariostr(int[] intarray) 
+    {
+        int indice = 0;
+        String minbinariostring[] = new String[200];
+        minbinariostring = inicializararraystr(minbinariostring);
 
-        while (min_array[a] != -1) {
-            return_minterms[a] = to_binary_string(min_array[a]);
-            a++;
+        //aqui se hace toda la  conversion de int a binario y a string...
+        while (intarray[indice] != -1) 
+        {
+            minbinariostring[indice] = convertirintbitstr(intarray[indice]);
+            indice++;
         }
 		
-		for( int i=0; i < return_minterms.length; i++ ) {
-			if( !return_minterms[i].equals("-1") )
-				System.out.println( return_minterms[i] );
+		for( int i=0; i < minbinariostring.length; i++ ) {
+			if( !minbinariostring[i].equals("-1") )
+				System.out.println( minbinariostring[i] );
 		}
 		System.out.println("\n------");
 
-        return return_minterms;
+        return minbinariostring;
     }
 
-    public static void complete_methods() {
-        int a = 0, b = 0;
-        String[][] final_pass = new String[100][100];
+    public static void terminarmetodo() 
+    {
+        int nomin = 0;
+        int indicedc = 0;
         
-        String[][] remaining_minterms = new String[100][100];
-        remaining_minterms = fill_arrays(remaining_minterms);
+        //variable parecida a maxbitsdontcare peero minterminos en especifico
+        String[][] matrizdeady = new String[100][100];
+        
+        //matriz de respaldo de los minterminos
+        String[][] minsrespaldo = new String[100][100];
+        minsrespaldo = inicializarmatriz(minsrespaldo);
 
-        final_pass = fill_arrays(final_pass);         
+        matrizdeady = inicializarmatriz(matrizdeady);         
 
-		prime_calc = fill_arrays(prime_calc);
-        pass_dontcare = fill_1d_array(pass_dontcare);
-        sub_minterms = fill_1d_array(sub_minterms);
+        //llenando la matriz con arreglos de -1
+	calculadorprimos = inicializarmatriz(calculadorprimos);
+        maxbitsdontcare = inicializararraystr(maxbitsdontcare);
+        
+        //llena el arreglo con -1 una forma de inicializarlo
+        m_terminos = inicializararraystr(m_terminos);
         
         
-        
-       // final_pass = fill_minterms(minterms);
-        track = final_pass;
-        while (minterms[a] != "-1") {
-            a++;
+        //se define el numero de minterminos 
+        while (minterminos[nomin] != "-1") 
+        {
+            nomin++;
         }
 
-        while (dontcares[b] != "-1") {
-            minterms[a] = dontcares[b];
-            a++;
-            b++;
+        // se añaden los dontcare al arreglo de minterminos
+        while (dontcares[indicedc] != "-1") 
+        {
+            minterminos[nomin] = dontcares[indicedc];
+            nomin++;
+            indicedc++;
         }
 
-        int chek = 0;
-        a = 0;
-        b = 0;
+    
+   
+        indicedc = 0;
         
-        final_pass = fill_minterms(minterms);
+        // este metodo llena los ceros faltantes en cada mintermino binario
+        // y acomoda a los minterminos en un array segun su numero de unos
+        matrizdeady = definirarraydeminter(minterminos);
+        
+        //llenando calculadorprimos con los minterminos con su maximo de bits y ordenados
+        //por su numero de unos en comun
 
 
-       for (int i = 0; i < final_pass.length; i++) {
-            for (int j = 0; j < final_pass[i].length; j++) {
-                if (final_pass[i][j] != "-1") {
-                    prime_calc[b][0] = final_pass[i][j];
-                    b++;
+       for (int i = 0; i < matrizdeady.length; i++) 
+       {
+            for (int j = 0; j < matrizdeady[i].length; j++)
+            {
+                if (matrizdeady[i][j] != "-1") 
+                {
+                    calculadorprimos[indicedc][0] = matrizdeady[i][j];
+                    indicedc++;
                 }
             }
         }
 
 		
+       //esta funcion rellena los terminos dontcare que les falte ceros 
+       
+        maxbitsdontcare = rellenardontcares(dontcares);
 
-        pass_dontcare = fill_dontcare(dontcares);
-
-        while(complete_flag != 'T'){
-            final_pass=compare_adjacent_minterms(final_pass);
+        //ciclo recursivo que sigue comparando adyascencia hasta que 
+        while(banderin != 'T')
+        {
+            matrizdeady=compararadyasencia(matrizdeady);
         }
         
-        remove_duplicate_primes();
-        remaining_minterms = get_essential_primes();
-        if (remaining_minterms[0][0] != "-1") {
-            remaining_minterms = get_primes(remaining_minterms);
+        quitarprimosdobles();
+   
+        
+        minsrespaldo = obtenerprimosescenciales();
+        if (minsrespaldo[0][0] != "-1") 
+        {
+            minsrespaldo = obtenerprimos(minsrespaldo);
         }
         
-        a=0;b=0;
+        nomin=0;indicedc=0;
         
-        while(prime_calc[a][0]!="-1" && prime_calc[a][0] != "D" && prime_calc[a][0] != "Y"){
-            sub_minterms[sub_min_index]=prime_calc[a][0];
-            sub_min_index++;
-            a++;
+        //mientras la variable calculadorprimos que es igual a final pass solo que no tiene
+        //columnas o solo tiene muchos arreglos con un solo termino en cada uno (final pass contien
+        //e los los minerminos en binario con su numero maximo de bits 
+        //no sea -1 o D y Y
+        
+        while(calculadorprimos[nomin][0]!="-1" && calculadorprimos[nomin][0] != "D" && calculadorprimos[nomin][0] != "Y")
+        {
+            //los subminters representan los minterminos que salen despues de haber 
+            //comparado la adyasencia 
+            m_terminos[inicesubmin]=calculadorprimos[nomin][0];
+            inicesubmin++;
+            nomin++;
         }
 
-        /*
-		System.out.println("--- SALIDA 3 ARREGLO done[i] ---");
-		for( int i=0; i < done.length; i++ ) {
-			System.out.print( done[i] + " ");
-			System.out.println("\n------");
-		}
-		*/
-        give_output(sub_minterms);
+        obtenerfuncionbooleana(m_terminos);
     }
-
-    public static String[][] fill_minterms(String[] input_min) {
-        String temp_min;
-        int a = 0, count;
+    
+    
+ //Este metodo crea un array de arrays donde los terminos de cada 
+    //array tienen en comun el mismo numero de unos ademas se llena a
+    //los minterminos con el numero maximo de bits definido por maxbits
+    
+    public static String[][] definirarraydeminter(String[] minbinstr) 
+    {
+        String depaso;
+        int indie = 0;
+        int unos;
         int ones = 0, twos = 0, threes = 0, fours = 0, fives=0, sixes=0, sevens=0,eights=0,nines=0,tens=0,elevens=0,twelves=0,thirteens=0;
-        String[][] group_wise = new String[100][100];
-        fill_arrays(group_wise);
+        String[][] matrzminadyacentes = new String[100][100];
+        
+        //esta funcion llena al array de otros arrays llenos todos de -1
+        inicializarmatriz(matrzminadyacentes);
 
-        while (input_min[a] != "-1")
+        while (minbinstr[indie] != "-1")
         {
 
-            count = 0;
-            temp_min = input_min[a];
+            unos = 0;
+            depaso = minbinstr[indie];
 
 
-            while (temp_min.length() < bits) {
-                temp_min = "0" + temp_min;
+            while (depaso.length() < maxbits) {
+                depaso = "0" + depaso;
             }
 
 
-            for (int i = 0; i < temp_min.length(); i++) {
-                if (temp_min.charAt(i) == '1') {
-                    count++;
+            for (int i = 0; i < depaso.length(); i++) 
+            {
+                if (depaso.charAt(i) == '1') {
+                    unos++;
                 }
             }
 
-            switch(count)
+            switch(unos)
             {
                 case 0:
-                    group_wise[0][0] = temp_min;
+                    matrzminadyacentes[0][0] = depaso;
                     break;
                 case 1: 
                     
-                    group_wise[1][ones] = temp_min;
+                    matrzminadyacentes[1][ones] = depaso;
                     ones++;
                     
                     break;
                     
                 case 2:
                     
-                    group_wise[2][twos] = temp_min;
+                    matrzminadyacentes[2][twos] = depaso;
                     twos++;
                 
                     break;
                 case 3:
                     
-                      group_wise[3][threes] = temp_min;
+                      matrzminadyacentes[3][threes] = depaso;
                       threes++;
                       
                     break;
                     
                 case 4:
                     
-                     group_wise[4][fours] = temp_min;
+                     matrzminadyacentes[4][fours] = depaso;
                      fours++;
                     
                     break;
                 case 5:
                     
-                    group_wise[5][fives] = temp_min;
+                    matrzminadyacentes[5][fives] = depaso;
                     fives++;
                     
                     break;
                 case 6:
                     
-                    group_wise[6][sixes] = temp_min;
+                    matrzminadyacentes[6][sixes] = depaso;
                     sixes++;
                     
                     break;
                 case 7:
                     
-                      group_wise[7][sevens] = temp_min;
+                      matrzminadyacentes[7][sevens] = depaso;
                       sevens++;
                     
                     break;
                 case 8: 
                     
-                    group_wise[8][eights] = temp_min;
+                    matrzminadyacentes[8][eights] = depaso;
                     eights++;
                 
                     break;
                 case 9:
                     
-                      group_wise[9][nines] = temp_min;
+                      matrzminadyacentes[9][nines] = depaso;
                       nines++;
                       
                     break;
                 case 10: 
-                    group_wise[10][tens] = temp_min;
+                    matrzminadyacentes[10][tens] = depaso;
                     tens++;
                     
                     break;
@@ -400,21 +452,18 @@ public class QuineMcCluskey {
                             
             }
          
-           a++;
+           indie++;
            
         }
-            
-         
-   
-
-
-
-		System.out.println("--- Matriz acomodada segun el numero de unos de los minterminos---\n");
-		for( int i=0; i < group_wise.length; i++ ) {
+     
+		System.out.println("--- Matriz acomodada segun el numero de unos de los minterminos---");
+		for( int i=0; i < matrzminadyacentes.length; i++ ) {
 			boolean hayValor = false;
-			for( int j=0; j < group_wise[i].length; j++ ) {
-				if( !group_wise[i][j].equals( "-1" ) ) {
-					System.out.print( group_wise[i][j] + " ");
+			for( int j=0; j < matrzminadyacentes[i].length; j++ ) 
+                        {
+				if( !matrzminadyacentes[i][j].equals( "-1" ) ) 
+                                {
+					System.out.print( matrzminadyacentes[i][j] + " ");
 					hayValor = true;
 				}
 			}
@@ -422,98 +471,110 @@ public class QuineMcCluskey {
 				System.out.println("\n------");
 		}
 
-        return group_wise;
+        return matrzminadyacentes;
     }
 
-    public static String[] fill_dontcare(String[] input_min) {
-        String[] group_wise_dontcare = new String[200];
-        group_wise_dontcare = fill_1d_array(group_wise_dontcare);
-        String temp_min;
-        int a = 0, count, b = 0;
+    //esta funcion rellena los terminos dontcare que les falte ceros 
+    public static String[] rellenardontcares (String[] arrminsbins) 
+    {
+        String[] arreglodontcare = new String[200];
+        arreglodontcare = inicializararraystr(arreglodontcare);
+        String bitstr;
+        int a = 0;
+     
+        int b = 0;
 
-        while (input_min[a] != "-1") {
-            count = 0;
-            temp_min = input_min[a];
+        //llenando el arreglo a partir de otro arreglo pero con el maximo de bits considerarlo
+        while (arrminsbins[a] != "-1") 
+        {
+         
+            bitstr = arrminsbins[a];
 
-            while (temp_min.length() < bits) {
-                temp_min = "0" + temp_min;
+            while (bitstr.length() < maxbits) 
+            {
+                bitstr = "0" + bitstr;
             }
 
-            group_wise_dontcare[b] = temp_min;
+            arreglodontcare[b] = bitstr;
             b++;
             a++;
         }
 
-        /*
-		System.out.println("--- SALIDA ARREGLO group_wise_dontcare[i] ---");
-		for( int i=0; i < group_wise_dontcare.length; i++ ) {
-			System.out.print( group_wise_dontcare[i] );
-		}
-		System.out.println("\n------");
-		*/
+       
 
-        return group_wise_dontcare;
+        return arreglodontcare;
     }
 
-    public static String[][] compare_adjacent_minterms(String[][] group_wise) {
-        String[][] all_combined = new String[100][100];
-        int count = 0,c=0;
-        int index = 0;
+    
+    //metodo que ve si un mintermino difiere con otro de otro array en un solo digito
+    public static String[][] compararadyasencia(String[][] matrzminadyacentes) 
+    {
+        String[][] nuevamatrizminadyacentes = new String[100][100];
+        int novecinas = 0;
+        int c=0;
+        int indice = 0;
         int min_comp = 0, min_comp2 = 1, min_comp1 = 0, min_comp3 = 0;
         int index1 = 0, index2 = 0;
 
 
 
-
-        for (int i = 0; i < 100; i++) {
-            for (int j = 0; j < 100; j++) {
-                all_combined[i][j] = "-1";
+//inicializando matriz de string....
+        for (int i = 0; i < 100; i++) 
+        {
+            for (int j = 0; j < 100; j++) 
+            {
+                nuevamatrizminadyacentes[i][j] = "-1";
             }
         }
-       while (c<group_wise.length) {
-        if(group_wise[c][0]!="-1" && group_wise[c+1][0] != "-1") count++;
+        
+        //recogiendo el numero de arreglos que conforman a ,a matriz del parametro
+       while (c<matrzminadyacentes.length) 
+       {
+        if(matrzminadyacentes[c][0]!="-1" && matrzminadyacentes[c+1][0] != "-1")
+            novecinas++;
          c++;
-     }
+       }
        
         
         
         
 
-if(count >=1){
-    count=0;
-        while (min_comp < group_wise.length - 1) {
+        if(novecinas >=1)
+        {
+             novecinas=0;
+            while (min_comp < matrzminadyacentes.length - 1)
+            {
 
 
-            while (group_wise[min_comp][min_comp1] != "-1") {
+                while (matrzminadyacentes[min_comp][min_comp1] != "-1") 
+                {
+
+                     while (matrzminadyacentes[min_comp2][min_comp3] != "-1") 
+                     {
 
 
 
-                while (group_wise[min_comp2][min_comp3] != "-1") {
+                         for (int ij = 0; ij < maxbits; ij++) 
+                         {
+
+                            if (matrzminadyacentes[min_comp][min_comp1].charAt(ij) != matrzminadyacentes[min_comp2][min_comp3].charAt(ij)) {
+                            novecinas++;
+                            indice = ij;
+                            }
+                         }
 
 
+                         if (novecinas == 1) 
+                        {
 
-
-
-
-                    for (int ij = 0; ij < bits; ij++) {
-
-                        if (group_wise[min_comp][min_comp1].charAt(ij) != group_wise[min_comp2][min_comp3].charAt(ij)) {
-                            count++;
-                            index = ij;
-                        }
-                    }
-
-
-                    if (count == 1) {
-
-                        all_combined[index1][index2] = group_wise[min_comp2][min_comp3].substring(0, index) + 'x' + group_wise[min_comp2][min_comp3].substring(index + 1, bits);
+                             nuevamatrizminadyacentes[index1][index2] = matrzminadyacentes[min_comp2][min_comp3].substring(0, indice) + '_' + matrzminadyacentes[min_comp2][min_comp3].substring(indice + 1, maxbits);
                        
-                        prime_fill(all_combined[index1][index2], group_wise[min_comp][min_comp1], group_wise[min_comp2][min_comp3]);
-                        index2++;
+                             definirprimos(nuevamatrizminadyacentes[index1][index2], matrzminadyacentes[min_comp][min_comp1], matrzminadyacentes[min_comp2][min_comp3]);
+                             index2++;
 
-                    }
+                        }
 
-                    count = 0;
+                    novecinas = 0;
                     min_comp3++;
 
 
@@ -522,9 +583,6 @@ if(count >=1){
                 min_comp3 = 0;
 
                 min_comp1++;
-
-
-
 
             }
 
@@ -538,38 +596,50 @@ if(count >=1){
             min_comp3 = 0;
 
         }
-first_prime_flag='F';
+            
+primerprimoband='F';
 }
+        
 
-else complete_flag= 'T';
-		System.out.println("--- Matriz comparacion de adyasencia ---\n");
-		for( int i=0; i < all_combined.length; i++ ) {
+else banderin= 'T';
+		System.out.println("--- Comparando adyacencia ---");
+		for( int i=0; i < nuevamatrizminadyacentes.length; i++ ) {
 			boolean hayValor = false;
-			for( int j=0; j < all_combined[i].length; j++ ) {
-				if( !all_combined[i][j].equals( "-1" ) ) {
-					System.out.print( all_combined[i][j] + " ");
+			for( int j=0; j < nuevamatrizminadyacentes[i].length; j++ ) {
+				if( !nuevamatrizminadyacentes[i][j].equals( "-1" ) ) {
+					System.out.print( nuevamatrizminadyacentes[i][j] + " ");
 					hayValor = true;
 				}
 			}
 			if( hayValor )
 				System.out.println("\n------");
 		}
-		return all_combined;
+		return nuevamatrizminadyacentes;
     }
 
-    public static void prime_fill(String result, String op1, String op2) {
+    public static void definirprimos(String result, String op1, String op2) 
+    {
 
-        int a = 0, b = 0, j = 1;
-        if (first_prime_flag == 'T') {
-            for (int i = 0; i < prime_calc.length; i++) {
+        int a = 0, b = 0;
+        int columna = 1;
+        if (primerprimoband == 'T') {
+            for (int i = 0; i < calculadorprimos.length; i++) {
 
-                if (prime_calc[i][0] == op1 || prime_calc[i][0] == op2) {
-
-                    while (prime_calc[i][j] != "-1") {
-                        j++;
+                if (calculadorprimos[i][0] == op1 || calculadorprimos[i][0] == op2) 
+                {
+                    //si el componente de calculadorprimos es igual a opcion 1 o opcion2 
+                    //y el termino anterior en esa fila no fue -1 entonces aumenta el indice
+                    //de calculadorprimos del lado de las columnas para
+                    //pasar al siguiente componente de la fila
+                    while (calculadorprimos[i][columna] != "-1") 
+                    {
+                        columna++;
                     }
-                    prime_calc[i][j] = result;
-                    j = 1;
+                    //llena a calculadorprimos ahora con los componentes de la fila 
+                    //de arrays con lo dado en result 
+                    //y regresate ala columna 1
+                    calculadorprimos[i][columna] = result;
+                    columna = 1;
                 }
 
 
@@ -578,11 +648,11 @@ else complete_flag= 'T';
         else {
 
 
-            for (int m = 0; m < prime_calc.length; m++) {
-                for (int n = 0; n < prime_calc[m].length; n++) {
-                    if (prime_calc[m][n] == op1 || prime_calc[m][n] == op2) {
+            for (int m = 0; m < calculadorprimos.length; m++) {
+                for (int n = 0; n < calculadorprimos[m].length; n++) {
+                    if (calculadorprimos[m][n] == op1 || calculadorprimos[m][n] == op2) {
 
-                        prime_calc[m][n] = result;
+                        calculadorprimos[m][n] = result;
 
                     }
                 }
@@ -592,36 +662,36 @@ else complete_flag= 'T';
         }
     }
 
-    public static void remove_duplicate_primes() {
-        int prime_calc_index = 0, current_index = 1, check_index = 2, temp_check_index = 0;
-        int row_index = 0, dontcare_index = 0;
+    public static void quitarprimosdobles()
+    {
+        int indicecalculprimos = 0;
+        int indactual = 1;
+        int check_index = 2;
+        int temp_check_index = 0;
+        int row_index = 0;
+        int dontcare_index = 0;
         String checking_term;
-        
+   
+        while (calculadorprimos[indicecalculprimos][0] != "-1") {
+            checking_term = calculadorprimos[indicecalculprimos][indactual];
 
-
-
-
-
-        while (prime_calc[prime_calc_index][0] != "-1") {
-            checking_term = prime_calc[prime_calc_index][current_index];
-
-            while (prime_calc[prime_calc_index][current_index] != "-1") {
-                check_index = current_index + 1;
-                while (prime_calc[prime_calc_index][check_index] != "-1") {
+            while (calculadorprimos[indicecalculprimos][indactual] != "-1") {
+                check_index = indactual + 1;
+                while (calculadorprimos[indicecalculprimos][check_index] != "-1") {
                     temp_check_index = check_index;
 
 
 
-                    if (prime_calc[prime_calc_index][current_index].equals(prime_calc[prime_calc_index][check_index])) {
+                    if (calculadorprimos[indicecalculprimos][indactual].equals(calculadorprimos[indicecalculprimos][check_index])) {
 
 
-                        while (prime_calc[prime_calc_index][temp_check_index] != "-1") {
-                            prime_calc[prime_calc_index][temp_check_index] = prime_calc[prime_calc_index][temp_check_index + 1];
+                        while (calculadorprimos[indicecalculprimos][temp_check_index] != "-1") {
+                            calculadorprimos[indicecalculprimos][temp_check_index] = calculadorprimos[indicecalculprimos][temp_check_index + 1];
                             temp_check_index++;
                         }
 
 
-                        prime_calc[prime_calc_index][temp_check_index] = "-1";
+                        calculadorprimos[indicecalculprimos][temp_check_index] = "-1";
                         check_index--;
                     }
 
@@ -629,57 +699,68 @@ else complete_flag= 'T';
 
                     check_index++;
                 }
-                current_index++;
+                indactual++;
             }
 
 
-            current_index = 1;
+            indactual = 1;
             check_index = 2;
-            prime_calc_index++;
+            indicecalculprimos++;
         }
 
         
     }
 
-    public static String[][] get_essential_primes() {
-        int i = 0, j = 0, count = 0;
-        int a = 0, b = 0;
-        sub_min_index = 0;
+    //esta funcion descarta los terminos que se repiten y obtiene los primos "escenciales" o principales
+    public static String[][] obtenerprimosescenciales() 
+    {
+        int fila = 0;
+        int indice = 0;
+        int count = 0;
+        int a = 0;
+        int b = 0;
+       
+        
         String[] temp_back = new String[100];
-        temp_back = fill_1d_array(temp_back);
+        temp_back = inicializararraystr(temp_back);
         int temp_back_index = 0;
         int k = 0;
 
-        String[][] temp_prime_calc = new String[100][100];
-        temp_prime_calc = fill_arrays(temp_prime_calc);
+        String[][] matrizprimadepaso = new String[100][100];
+        matrizprimadepaso = inicializarmatriz(matrizprimadepaso);
 
         
         
-
-        while (prime_calc[i][0] != "-1") {
-            while (pass_dontcare[j] != "-1") {
-                if (prime_calc[i][0].equals(pass_dontcare[j])) {
-                    prime_calc[i][0] = "D";
+        //primos escenciales 
+        //maxbitsdontcare representa los dontcare en binario con el maximo numero 
+        //de bits disponible
+        while (calculadorprimos[fila][0] != "-1") 
+        {
+            while (maxbitsdontcare[indice] != "-1") 
+            {
+                if (calculadorprimos[fila][0].equals(maxbitsdontcare[indice])) 
+                {
+                    calculadorprimos[fila][0] = "D";
                 }
-                j++;
+                indice++;
             }
-            j = 0;
-            i++;
+            indice = 0;
+            fila++;
         }
 
 
 
-        i = 0;
-        j = 0;
-        while (prime_calc[i][0] != "-1") {
-            if (prime_calc[i][2].equals("-1") && prime_calc[i][0] != "D" && prime_calc[i][1] !="-1") {
-                sub_minterms[sub_min_index] = prime_calc[i][1];
-                sub_min_index++;
+        fila = 0;
+        indice = 0;
+        while (calculadorprimos[fila][0] != "-1") {
+            if (calculadorprimos[fila][2].equals("-1") && calculadorprimos[fila][0] != "D" && calculadorprimos[fila][1] !="-1") {
+                m_terminos[inicesubmin] = calculadorprimos[fila][1];
+                inicesubmin++;
 
-                while (prime_calc[a][0] != "-1") {
-                    while (prime_calc[a][b] != "-1") {
-                        if (prime_calc[a][b].equals(prime_calc[i][1])) {
-                            prime_calc[a][0] = "Y";
+                while (calculadorprimos[a][0] != "-1") {
+                    while (calculadorprimos[a][b] != "-1") {
+                        if (calculadorprimos[a][b].equals(calculadorprimos[fila][1])) {
+                            calculadorprimos[a][0] = "Y";
                         }
 
                         b++;
@@ -691,7 +772,7 @@ else complete_flag= 'T';
                 b = 0;
 
             }
-            i++;
+            fila++;
         }
 
 
@@ -702,10 +783,11 @@ else complete_flag= 'T';
         a = 0;
         b = 0;
         int c = 0, d = 0;
-        while (prime_calc[a][0] != "-1") {
-            if (prime_calc[a][0] != "D" && prime_calc[a][0] != "Y") {
-                while (prime_calc[a][b] != "-1") {
-                    temp_prime_calc[c][d] = prime_calc[a][b];
+        while (calculadorprimos[a][0] != "-1") {
+            if (calculadorprimos[a][0] != "D" && calculadorprimos[a][0] != "Y") {
+                while (calculadorprimos[a][b] != "-1")
+                {
+                    matrizprimadepaso[c][d] = calculadorprimos[a][b];
                     b++;
                     d++;
 
@@ -719,41 +801,35 @@ else complete_flag= 'T';
             d = 0;
         }
 
-        /*
-		System.out.println("--- SALIDA ARREGLO temp_prime_calc[index_i][index_j] ---");
-		for( int index_i=0; index_i < temp_prime_calc.length; index_i++ ) {
-			for( int index_j=0; index_j < temp_prime_calc[index_i].length; index_j++ ) {
-				if( !temp_prime_calc[index_i][index_j].equals( "-1" ) )
-					System.out.print( temp_prime_calc[index_i][index_j] + " ");
-			}
-			System.out.println("\n------");
-		}
-		*/
+ 
         
-        return temp_prime_calc;
+        return matrizprimadepaso;
 
 
     }
 
-    public static String[][] get_primes(String[][] temp_prime_calc) {
+    public static String[][] obtenerprimos(String[][] temp_prime_calc) 
+    {
         int x = 0, a = 0, b = 1, c = 0, d = 0, i = 0;
         int count = 0;
         String max_minterm;
         int max_index = 0;
         String[] primes = new String[100];
-        primes = fill_1d_array(primes);
+        primes = inicializararraystr(primes);
 
         int[] prime_count = new int[100];
-        prime_count = fill_1d_int_array(prime_count);
+        prime_count = inicializararrayint(prime_count);
 
         String[][] temp_prime_calc2 = new String[100][100];
-        temp_prime_calc2 = fill_arrays(temp_prime_calc2);
+        temp_prime_calc2 = inicializarmatriz(temp_prime_calc2);
 
 
 
 
-        while (temp_prime_calc[a][0] != "-1") {
-            while (temp_prime_calc[a][b] != "-1") {
+        while (temp_prime_calc[a][0] != "-1")
+        {
+            while (temp_prime_calc[a][b] != "-1")
+            {
                 primes[i] = temp_prime_calc[a][b];
                 b++;
                 i++;
@@ -788,7 +864,8 @@ else complete_flag= 'T';
 
         count = 0;
         c = 0;
-        while (prime_count[c] != -1) {
+        while (prime_count[c] != -1)
+        {
             if (prime_count[c] > count) {
                 count = prime_count[c];
                 max_index = c;
@@ -799,8 +876,8 @@ else complete_flag= 'T';
         b = 1;
         max_minterm = primes[max_index];
         if(max_minterm !="-1"){
-        sub_minterms[sub_min_index] = max_minterm;
-        sub_min_index++;
+        m_terminos[inicesubmin] = max_minterm;
+        inicesubmin++;
         }
         
        
@@ -819,13 +896,15 @@ else complete_flag= 'T';
 
         a = 0;
         b = 0;
-        c = 0;
-        d = 0;
+    
         
-        while (prime_calc[a][0] != "-1") {
-            while (prime_calc[a][b] != "-1") {
-                if (prime_calc[a][b].equals(max_minterm)) {
-                    prime_calc[a][0] = "Y";
+        while (calculadorprimos[a][0] != "-1") 
+        {
+            while (calculadorprimos[a][b] != "-1") 
+            {
+                if (calculadorprimos[a][b].equals(max_minterm)) 
+                {
+                    calculadorprimos[a][0] = "Y";
                 }
 
                 b++;
@@ -855,15 +934,7 @@ else complete_flag= 'T';
             d = 0;
         }
 
-		System.out.println("--- SALIDA ARREGLO temp_prime_calc2[i][j] ---");
-		for( int index_i=0; index_i < temp_prime_calc2.length; index_i++ ) 
-                {
-			for( int j=0; j < temp_prime_calc2[index_i].length; j++ ) 
-                        {
-				System.out.print( temp_prime_calc2[index_i][j] + " ");
-			}
-			System.out.println("\n------");
-		}
+
 
         return temp_prime_calc2;
 
@@ -871,126 +942,134 @@ else complete_flag= 'T';
 
     }
 
-    public static void give_output(String[] output_array) {
+    public static void obtenerfuncionbooleana(String[] implicantes)
+    {
 
-        int temp_pass_index;
-        int output_array_index = 0;
-        int h = 0;
-        int count = 0;
-        temp_pass_index = pass_index;
-        String[] minimized_array = new String[200];
-        fill_1d_array(minimized_array);
-        int min_comp = 0, min_comp2 = 0, min_comp1 = 0, min_comp3 = 0;
-        int minimized_index = 0;
-        String output_string = "";
+        int cuenta = 0;
+ 
+        String[] arrayminimizado = new String[200];
+        inicializararraystr(arrayminimizado);
+ 
+        int indiceminimax = 0;
+        String funcion = "";
 
         
 
-        String temp_minterm = "";
+        String temporall = "";
 
-        int sub_min_index = 0;
-        String final_output = "";
-        String temp_minterm_check = "";
+        String letrarepresent = "";
         int i = 0;
 
-        while (output_array[i] != "-1") {
-            for (int ij = bits - 1; ij >= 0; ij--) {
+        while (implicantes[i] != "-1") 
+        {
+            for (int ij = maxbits - 1; ij >= 0; ij--) 
+            {
 
-                if (output_array[i].charAt(ij) != 'x') {
+                if (implicantes[i].charAt(ij) != '_') 
+                {
 
-                    if (output_array[i].charAt(ij) == '0') {
-                        if (ij == 0) {
-                            temp_minterm_check = "a";
-                        }
-                        if (ij == 1) {
-                            temp_minterm_check = "b";
-                        }
-                        if (ij == 2) {
-                            temp_minterm_check = "c";
-                        }
-                        if (ij == 3) {
-                            temp_minterm_check = "d";
-                        }
-                        if (ij == 4) {
-                            temp_minterm_check = "e";
-                        }
-                        if (ij == 5) {
-                            temp_minterm_check = "f";
-                        }
-                        if (ij == 6) {
-                            temp_minterm_check = "g";
-                        }
-                        if (ij == 7) {
-                            temp_minterm_check = "h";
-                        }
-                        if (ij == 8) {
-                            temp_minterm_check = "i";
-                        }
-                        if (ij == 9) {
-                            temp_minterm_check = "j";
-                        }
-                        if (ij == 10) {
-                            temp_minterm_check = "k";
-                        }
-                        if (ij == 11) {
-                            temp_minterm_check = "l";
-                        }
-                        if (ij == 12) {
-                            temp_minterm_check = "m";
-                        }
-                        if (ij == 13) {
-                            temp_minterm_check = "n";
-                        }
+                    if (implicantes[i].charAt(ij) == '0') 
+                    {
+                        switch(ij)
+                        {
+                            case 0:
+                                 letrarepresent = "a";
+                                
+                                break;
+                                
+                            case 1:
+                                  letrarepresent = "b";
+                                break;
+                                
+                            case 2:
+                                  letrarepresent = "c";
+                                break;
+                                
+                            case 3:   
+                                  letrarepresent = "d";
+                                break;
+                                
+                            case 4:
+                                  letrarepresent = "e";
+                                break;
+                                
+                            case 5:
+                                  letrarepresent = "f";
+                                break;
+                                
+                            case 6:
+                                  letrarepresent = "g";
+                                break;
+                                
+                            case 7:
+                                  letrarepresent = "h";
+                                break;
+                                
+                            case 8:
+                                  letrarepresent = "i";
+                                break;
+                                
+                                 case 9:
+                                  letrarepresent = "j";
+                                break;
+                                
+                               
+                              
+                        } 
+                    
+                    
                     }
-                    if (output_array[i].charAt(ij) == '1') {
-
-                        if (ij == 0) {
-                            temp_minterm_check = "A";
-                        }
-                        if (ij == 1) {
-                            temp_minterm_check = "B";
-                        }
-                        if (ij == 2) {
-                            temp_minterm_check = "C";
-                        }
-                        if (ij == 3) {
-                            temp_minterm_check = "D";
-                        }
-                        if (ij == 4) {
-                            temp_minterm_check = "E";
-                        }
-                        if (ij == 5) {
-                            temp_minterm_check = "F";
-                        }
-                        if (ij == 6) {
-                            temp_minterm_check = "G";
-                        }
-                        if (ij == 7) {
-                            temp_minterm_check = "H";
-                        }
-                        if (ij == 8) {
-                            temp_minterm_check = "I";
-                        }
-                        if (ij == 9) {
-                            temp_minterm_check = "J";
-                        }
-                        if (ij == 10) {
-                            temp_minterm_check = "K";
-                        }
-                        if (ij == 11) {
-                            temp_minterm_check = "L";
-                        }
-                        if (ij == 12) {
-                            temp_minterm_check = "M";
-                        }
-                        if (ij == 13) {
-                            temp_minterm_check = "M";
-                        }
-                        
-                        
+                    if (implicantes[i].charAt(ij) == '1') 
+                    {
+                        switch(ij)
+                        {
+                            case 0:
+                                 letrarepresent = "A";
+                                
+                                break;
+                                
+                            case 1:
+                                  letrarepresent = "B";
+                                break;
+                                
+                            case 2:
+                                  letrarepresent = "C";
+                                break;
+                                
+                            case 3:   
+                                  letrarepresent = "D";
+                                break;
+                                
+                            case 4:
+                                  letrarepresent = "E";
+                                break;
+                                
+                            case 5:
+                                  letrarepresent = "F";
+                                break;
+                                
+                            case 6:
+                                  letrarepresent = "G";
+                                break;
+                                
+                            case 7:
+                                  letrarepresent = "H";
+                                break;
+                                
+                            case 8:
+                                  letrarepresent = "I";
+                                break;
+                                
+                                 case 9:
+                                  letrarepresent = "J";
+                                break;
+                                
+                               
+                              
+                        } 
 
                     }
-                    temp_minterm = temp_minterm_check + temp_minterm;
+                    temporall = letrarepresent + temporall;
 
                 }
             }
@@ -999,100 +1078,90 @@ else complete_flag= 'T';
             i++;
 
 
-            for (int j = 0; j < minimized_array.length; j++) {
+            for (int j = 0; j < arrayminimizado.length; j++) 
+            {
 
-                if (minimized_array[j].equals(temp_minterm)) {
-                    count++;
+                if (arrayminimizado[j].equals(temporall)) 
+                {
+                    cuenta++;
                 }
             }
 
-            if (count == 0) {
-                minimized_array[minimized_index] = temp_minterm;
-                minimized_index++;
+            if (cuenta == 0) 
+            {
+                arrayminimizado[indiceminimax] = temporall;
+                indiceminimax++;
             }
-            temp_minterm = "";
-            count = 0;
+            temporall = "";
+            cuenta = 0;
 
 
         }
         i = 0;
 
 
-        minimized_index = 0;
-        while (minimized_array[minimized_index] != "-1") {
-            output_string = output_string + "+" + minimized_array[minimized_index];
-            minimized_index++;
+        indiceminimax = 0;
+        while (arrayminimizado[indiceminimax] != "-1") 
+        {
+            funcion = funcion + "+" + arrayminimizado[indiceminimax];
+            indiceminimax++;
         }
-        output_string = output_string.substring(1, output_string.length());
+        funcion = funcion.substring(1, funcion.length());
 
 		System.out.println("\n--- Funcion booleana resultante ---");
-        System.out.println("\n" + output_string);
+        System.out.println("\n" + funcion);
 
     }
 
-    public static String[][] fill_dontcares(String[][] filling_array) {
-        int filling_array_index = 0;
-        int final_pass_dontcare_index = 0;
-        while (pass_dontcare[final_pass_dontcare_index] != "-1") {
-            for (int i = 0; i < filling_array.length; i++) {
-                for (int j = 0; j < filling_array[i].length; j++) {
-                    if (pass_dontcare[final_pass_dontcare_index].equals(filling_array[i][j])) {
-                        filling_array[i][j] = "-1";
-
-                    }
-                }
-            }
-            final_pass_dontcare_index++;
-        }
-        return filling_array;
-    }
-
-    public static String[][] fill_arrays(String[][] all_combined) {
-        for (int i = 0; i < all_combined.length; i++) {
-            for (int j = 0; j < all_combined[i].length; j++) {
-                all_combined[i][j] = "-1";
+    
+    ///metodo que llena un array de arrays con -1
+    public static String[][] inicializarmatriz(String[][] matrizstr) 
+    {
+        for (int i = 0; i < matrizstr.length; i++) 
+        {
+            for (int j = 0; j < matrizstr[i].length; j++) 
+            {
+                matrizstr[i][j] = "-1";
             }
         }
 
-        return all_combined;
+        return matrizstr;
     }
 
-    public static int[][] fill_int_arrays(int[][] all_combined) {
-        for (int i = 0; i < all_combined.length; i++) {
-            for (int j = 0; j < all_combined[i].length; j++) {
-                all_combined[i][j] = -1;
-            }
-        }
 
-        return all_combined;
+
+    public static String[] inicializararraystr(String[] arraystr) 
+    {
+        for (int i = 0; i < arraystr.length; i++) 
+        {
+            arraystr[i] = "-1";
+        }
+        return arraystr;
     }
 
-    public static String[] fill_1d_array(String[] filling_array) {
-        for (int i = 0; i < filling_array.length; i++) {
-            filling_array[i] = "-1";
-        }
-        return filling_array;
-    }
+    public static int[] inicializararrayint(int[] arrayint) 
+    {
 
-    public static int[] fill_1d_int_array(int[] temp_array) {
-
-        for (int i = 0; i < temp_array.length; i++) {
-            temp_array[i] = -1;
+        for (int i = 0; i < arrayint.length; i++) {
+            arrayint[i] = -1;
         }
 
-        return temp_array;
+        return arrayint;
     }
     
-    public static String to_binary_string(int integer_val){
-        int quotient=integer_val,remainder;
+    //metodo que convierte de int a binario y luego a string
+    public static String convertirintbitstr(int entero)
+    {
+        int cociente=entero,respaldo;
         String result="";
-       while(quotient != 0){
+        //funciona de forma recursiva haciendo varios pasos al mismo tiempo..
+       while(cociente != 0)
+       {
            
-           remainder=quotient%2;
-           quotient=quotient/2;
-           result=Integer.toString(remainder)+result;
+           respaldo=cociente%2;
+           cociente=cociente/2;
+           result=Integer.toString(respaldo)+result;
        }
        return result;
     }
 }
-
